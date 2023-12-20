@@ -10,17 +10,11 @@
 
     <!-- File List View Template -->
     <Page.Resources>
-        <DataTemplate x:Key="VideoItemTemplate" >
-            <StackPanel  Orientation="Horizontal" Height="56" Padding="5,5,5,5">
-                <Viewbox Stretch="UniformToFill" Width="72" Height="52" VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <Image Source="{Binding Thumbnail}"  Margin="-25, 0, 0, 0"/>
-                </Viewbox>
-                <StackPanel  Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Left" Padding="10 0 0 0" >
-                    <TextBlock Text="{Binding FileName}" TextTrimming="CharacterEllipsis" FontSize="14" Width="180" FontFamily="Bahnschrift Light"/>
-                    <TextBlock Text="{Binding CreationDateTime}" FontSize="13" Foreground="#FFB9B9B9" FontFamily="Bahnschrift SemiLight" Margin="4,0,0,0" />
-                </StackPanel>
-            </StackPanel>
-        </DataTemplate>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/CustomStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Page.Resources>
 
     <Grid x:Name="trimRangeSelector" ManipulationMode="None">
@@ -48,6 +42,7 @@
                     ValueChanged="RangeSelector_ValueChanged"
                     ThumbDragStarted="RangeSelector_DragStarted"
                     ThumbDragCompleted="VideoTimeRangeSelector_ThumbDragCompleted"
+                    Style="{StaticResource CustomRangeSelector}"
                     />
 
             </Grid>
