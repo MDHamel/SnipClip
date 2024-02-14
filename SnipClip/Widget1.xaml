@@ -1,11 +1,12 @@
 ﻿<Page
-    x:Class="SnipClip.Widget1"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:SnipClip"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:Custom="using:Microsoft.UI.Xaml.Controls"
+    x:Class="SnipClip.Widget1"
     mc:Ignorable="d" Height="580" Width="850">
 
     <!-- File List View Template -->
@@ -14,10 +15,42 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/CustomStyles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- Define your Storyboard here -->
+            <Storyboard x:Key="ShowHideStoryboard" x:Name="ShowHideToast">
+                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity" Storyboard.TargetName="ToastContainer">
+                    <EasingDoubleKeyFrame KeyTime="0:0:0" Value="0">
+                        <EasingDoubleKeyFrame.EasingFunction>
+                            <CubicEase EasingMode="EaseIn"/>
+                        </EasingDoubleKeyFrame.EasingFunction>
+                    </EasingDoubleKeyFrame>
+                    <EasingDoubleKeyFrame KeyTime="0:0:0.5" Value="1">
+                        <EasingDoubleKeyFrame.EasingFunction>
+                            <CubicEase EasingMode="EaseOut"/>
+                        </EasingDoubleKeyFrame.EasingFunction>
+                    </EasingDoubleKeyFrame>
+                    <EasingDoubleKeyFrame KeyTime="0:0:2" Value="1">
+                        <EasingDoubleKeyFrame.EasingFunction>
+                            <CubicEase EasingMode="EaseIn"/>
+                        </EasingDoubleKeyFrame.EasingFunction>
+                    </EasingDoubleKeyFrame>
+                    <EasingDoubleKeyFrame KeyTime="0:0:2.5" Value="0">
+                        <EasingDoubleKeyFrame.EasingFunction>
+                            <CubicEase EasingMode="EaseOut"/>
+                        </EasingDoubleKeyFrame.EasingFunction>
+                    </EasingDoubleKeyFrame>
+                </DoubleAnimationUsingKeyFrames>
+                <ObjectAnimationUsingKeyFrames Storyboard.TargetProperty="Visibility" Storyboard.TargetName="ToastContainer">
+                    <DiscreteObjectKeyFrame KeyTime="0:0:0" Value="Visible"/>
+                    <DiscreteObjectKeyFrame KeyTime="0:0:2.5" Value="Collapsed"/>
+                </ObjectAnimationUsingKeyFrames>
+            </Storyboard>
         </ResourceDictionary>
     </Page.Resources>
 
-    <Grid x:Name="trimRangeSelector" ManipulationMode="None">
+
+
+    <Grid x:Name="main" ManipulationMode="None">
         <!-- Left Panel -->
         <Grid Background="#FF212121" HorizontalAlignment="Left" Width="284">
             <ListView x:Name="fileListView" Background="#FF212121" ItemTemplate="{StaticResource VideoItemTemplate}" SelectionChanged="fileListView_SelectionChanged" Margin="0,10,0,62" />
@@ -26,32 +59,63 @@
 
         <!-- Right Panel -->
         <Grid Background="#FF262626" HorizontalAlignment="Left" Width="566" Margin="284,0,0,0" >
-            <Border Height="322" VerticalAlignment="Top" Background="#FF121212">
+            <Border Height="290" VerticalAlignment="Top" Background="#FF121212">
                 <MediaElement x:Name="videoPreview"  RenderTransformOrigin="0,0"  VerticalAlignment="Top" AreTransportControlsEnabled="True" AutoPlay="False" MediaOpened="videoPreview_MediaOpened" CurrentStateChanged="videoPreview_MediaStateChanged" FocusVisualSecondaryBrush="#99000000" Stereo3DVideoRenderMode="Stereo" >
                     <MediaElement.TransportControls>
-                        <MediaTransportControls x:Name="customTransportControls" IsZoomButtonVisible="False" IsFullWindowButtonVisible="False" IsSeekBarVisible="False" />
+                        <MediaTransportControls x:Name="customTransportControls" IsZoomButtonVisible="False" IsFullWindowButtonVisible="False" IsSeekBarVisible="False" IsVolumeButtonVisible="False" IsCompactOverlayButtonVisible="False" />
                     </MediaElement.TransportControls>
                 </MediaElement>
             </Border>
 
-            <Grid Margin="10,327,10,0" Height="94" VerticalAlignment="Top">
-                <controls:RangeSelector x:Name="VideoTimeRangeSelector" Margin="0,0,0,0" Height="27" StepFrequency="0.05" VerticalAlignment="Center"
-                    Maximum="{x:Bind VideoController.Duration, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"  
-                    RangeStart="{x:Bind VideoController.Start, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                    RangeEnd="{x:Bind VideoController.End, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+            <Grid Margin="10,295,10,0" Height="94" VerticalAlignment="Top">
+                <controls:RangeSelector x:Name="VideoTimeRangeSelector" Margin="0,0,10,0" Height="40" StepFrequency="0.05" VerticalAlignment="Center"
+                    Maximum="{x:Bind Mode=TwoWay, Path=VideoController.Duration, UpdateSourceTrigger=PropertyChanged}"  
+                    RangeStart="{x:Bind Mode=TwoWay, Path=VideoController.Start, UpdateSourceTrigger=PropertyChanged}" 
+                    RangeEnd="{x:Bind Mode=TwoWay, Path=VideoController.End, UpdateSourceTrigger=PropertyChanged}" 
                     ValueChanged="RangeSelector_ValueChanged"
                     ThumbDragStarted="RangeSelector_DragStarted"
                     ThumbDragCompleted="VideoTimeRangeSelector_ThumbDragCompleted"
                     Style="{StaticResource CustomRangeSelector}"
+                  
                     />
 
             </Grid>
 
-            <TextBox x:Name="StartTimeInput" Padding="5 6 0 0"  HorizontalAlignment="Left" Margin="118,421,0,0" Text="0" VerticalAlignment="Top" FontFamily="Cascadia Code" InputScope="Number" TextChanged="StartTimeInput_TextChanged" TextWrapping="Wrap" Width="85" MaxLength="8" Height="32" TextAlignment="Justify" PlaceholderText="" />
-            <TextBox x:Name="EndTimeInput" Padding="5 6 0 0"  HorizontalAlignment="Left" Margin="283,421,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" FontFamily="Cascadia Code" InputScope="Number" TextChanged="EndTimeInput_TextChanged" Width="77" MaxLength="8" RenderTransformOrigin="0.49,0.504" PlaceholderText=""/>
 
-            <Button x:Name="trimButton" Content="Trim" Margin="412,421,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.07,-0.371" Click="Button_Click"/>
+            <Grid HorizontalAlignment="Center"  Height="42" RenderTransformOrigin="0.532,1.851" VerticalAlignment="Top" Margin="0,394,0,0" Width="546">
+                <TextBlock HorizontalAlignment="Left" Margin="26,0,0,0" TextWrapping="Wrap" Text="Start:" VerticalAlignment="Top" FontSize="16">
+                    <FlyoutBase.AttachedFlyout>
+                        <Custom:TextCommandBarFlyout/>
+                    </FlyoutBase.AttachedFlyout>
+                </TextBlock>
+                <TextBlock HorizontalAlignment="Left" Margin="243,0,0,0" TextWrapping="Wrap" Text="End:" VerticalAlignment="Top" FontSize="16"/>
+                <TextBox x:Name="StartTimeInput" Padding="5 6 0 0"  HorizontalAlignment="Left" Margin="79,0,0,0" Text="0" VerticalAlignment="Top" FontFamily="Cascadia Code" InputScope="Number" TextChanged="StartTimeInput_TextChanged" TextWrapping="Wrap" Width="85" MaxLength="8" Height="32" TextAlignment="Justify" PlaceholderText="" />
+                <TextBox x:Name="EndTimeInput" Padding="5 6 0 0"  HorizontalAlignment="Left" Margin="301,0,0,0" TextWrapping="Wrap" Text="0" VerticalAlignment="Top" FontFamily="Cascadia Code" InputScope="Number" TextChanged="EndTimeInput_TextChanged" Width="77" MaxLength="8" RenderTransformOrigin="0.49,0.504" PlaceholderText=""/>
+
+                <Button x:Name="trimButton" Content="Trim" Margin="461,0,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.07,-0.371" Click="TirmButton_Click" Width="64" Background="#FF2482EC"/>
+            </Grid>
+
+            <Grid Height="110" VerticalAlignment="Top" Margin="0,460,0,0">
+                <TextBox x:Name="SaveFolderPathBox" HorizontalAlignment="Left" Margin="33,10,0,0" TextWrapping="Wrap" Text="{x:Bind Path=editor.SaveFolder.Path}" VerticalAlignment="Top" Width="370" IsReadOnly="True"/>
+                <TextBox x:Name="filenameTextbox" HorizontalAlignment="Left" Margin="33,68,0,0" TextWrapping="Wrap" Text="{x:Bind Path=filename}" VerticalAlignment="Top" Width="271" TextChanged="TextBox_TextChanged"/>
+                <ComboBox x:Name="FileExtensionComboBox" Margin="304,68,0,0" Width="99" SelectedIndex="0" RenderTransformOrigin="0.744,0.628">
+                    <ComboBoxItem Content=".mp4"/>
+                    <ComboBoxItem Content=".wmv"/>
+                    <ComboBoxItem Content=".avi"/>
+                </ComboBox>
+                <Button x:Name="SaveButton" Content="Save" Margin="424,68,0,0" Width="120" Background="#FF2482EC" VerticalAlignment="Top" Click="SaveButton_Click"/>
+                <Button x:Name="ChangeSaveFolder" Content="Change Folder" Margin="424,10,0,0" Width="120" Background="#FF4D4D4D" VerticalAlignment="Top" Click="ChangeSaveFolder_Click"/>
+            </Grid>
+
+
             <ProgressRing x:Name="progressRing" Margin="226,106,226,0" VerticalAlignment="Top" Height="111" RenderTransformOrigin="0.49,0.518" HorizontalAlignment="Stretch" IsActive="True" Foreground="#FF189BFF" Visibility="Collapsed"/>
+
+            <!-- Toast Messsage -->
+            <Border x:Name="ToastContainer" Height="auto"  Background="#DC2482EC"  CornerRadius="8" VerticalAlignment="Top" HorizontalAlignment="Center"  Margin="0,420,0,0" BorderBrush="#DCF0F5FF" BorderThickness="2" Opacity="0" Visibility="Collapsed">
+                <TextBlock x:Name="ToastMessage" HorizontalAlignment="Center" VerticalAlignment="Center"  Text="Toast Message" FontSize="14" FontWeight="Medium" Width="auto" Padding="25 10"/>
+            </Border>
+
+
         </Grid>
     </Grid>
 </Page>
