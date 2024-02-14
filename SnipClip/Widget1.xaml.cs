@@ -284,7 +284,6 @@ namespace SnipClip
 				// The user selected a folder
 				// Perform actions with the selected folder
 				editor.SetSaveFolder(folder);
-				SaveFolderPathBox.Text = folder.Path;
 			}
 			else
 			{
@@ -308,16 +307,18 @@ namespace SnipClip
 			filename = filenameTextbox.Text;
         }
 
-		private void TextBlock_SelectionChanged(object sender, RoutedEventArgs e)
-		{
-
-		}
 
 		private void RangeSelector_ValueChanged(object sender, RangeChangedEventArgs e)
 		{
 
 			StartTimeInput.Text = Math.Round(VideoController.Start, 2).ToString("F2");
 			EndTimeInput.Text = Math.Round(VideoController.End, 2).ToString("F2");
+		}
+
+		private async void OpenEditedVideoFolder(object sender, RoutedEventArgs e)
+		{
+			await Launcher.LaunchFolderAsync(editor.SaveFolder);
+
 		}
 
 		public void Toast(string msg)
