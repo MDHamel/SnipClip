@@ -66,7 +66,7 @@
                         <ListView x:Name="fileListView" Background="#FF212121" ItemTemplate="{StaticResource VideoItemTemplate}" SelectionChanged="fileListView_SelectionChanged" Margin="0,10,0,55" />
                         <Grid Margin="0,10,0,10" VerticalAlignment="Bottom" Padding="10,0,10,0">
                             <Button x:Name="OpenSourceFolderButton" Content="Open Folder" VerticalAlignment="Center"  HorizontalAlignment="Left" Click="Open_Folder_Click" Background="#FF2482EC" />
-                            <Button x:Name="ChangeSourceFolderButton" Content="Change Folder" VerticalAlignment="Center"  HorizontalAlignment="Right" />
+                            <Button x:Name="ChangeSourceFolderButton" Content="Change Folder" VerticalAlignment="Center"  HorizontalAlignment="Right" Click="ChangeRootVideoFolder"/>
                         </Grid>
                     </Grid>
                 </PivotItem>
@@ -75,7 +75,7 @@
                         <ListView x:Name="editedFileListView" Background="#FF212121" ItemTemplate="{StaticResource VideoItemTemplate}" SelectionChanged="fileListView_SelectionChanged" Margin="0,10,0,55" />
                         <Grid Margin="0,10,0,10" VerticalAlignment="Bottom" Padding="10,0,10,0">
                             <Button x:Name="OpenEditedFolderButton" Content="Open Folder" VerticalAlignment="Center"  HorizontalAlignment="Left" Background="#FF2482EC" Click="OpenEditedVideoFolder"/>
-                            <Button x:Name="ChangeEditedFolderButton" Content="Change Folder" VerticalAlignment="Center"  HorizontalAlignment="Right" Click="ChangeSaveFolder_Click"/>
+                            <Button x:Name="ChangeEditedFolderButton" Content="Change Folder" VerticalAlignment="Center"  HorizontalAlignment="Right" Click="ChangeEditedFolder_Click"/>
                         </Grid>
                     </Grid>
                 </PivotItem>

@@ -128,5 +128,7 @@ namespace SnipClip
 
 			deferral.Complete();
 		}
+
+		
 	}
 }

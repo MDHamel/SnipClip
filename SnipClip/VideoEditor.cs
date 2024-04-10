@@ -85,7 +85,7 @@ namespace SnipClip
 			TempFolderGenerator();
 		}
 
-		public void SetSaveFolder(StorageFolder folder)
+		public async Task SetSaveFolder(StorageFolder folder)
 		{
 			SaveFolder = folder;
 			save_path = SaveFolder.Path;

@@ -36,15 +36,18 @@ namespace SnipClip
 	/// 
 	public sealed partial class Widget1 : Page
 	{
-		StorageFolder rootFolderPath;
+		StorageFolder rootFolder;
 
-		List<FileListItem> fileList = new List<FileListItem>();
+		List<FileListItem> rootFileList = new List<FileListItem>();
+		List<FileListItem> editedFileList = new List<FileListItem>();
 
 		VideoEditor editor = new VideoEditor();
 
 		ViewModel VideoController = new ViewModel();
 
 		DispatcherTimer rangeSelectorDragTimer = new DispatcherTimer();
+
+		ApplicationDataContainer settings;
 
 		string filename = "SnippedClip";
 
@@ -54,34 +57,55 @@ namespace SnipClip
 			this.InitializeComponent();
 
 			editor.WidgetContext = this;
+			settings = ApplicationData.Current.LocalSettings;
 
-			SetRootDir();
+			Application.Current.Resuming += new EventHandler<Object>(App_Resuming);
+
+			AsyncInit();
 		}
 
-		private async void SetRootDir()
+		private async void AsyncInit()
 		{
-			StorageFolder BASE_DIR = KnownFolders.VideosLibrary;
+			if (settings.Values["rootPath"] == null)
+			{
+				StorageFolder BASE_DIR = KnownFolders.VideosLibrary;
 
-			rootFolderPath = await BASE_DIR.TryGetItemAsync("Captures") as StorageFolder;
+				rootFolder = await BASE_DIR.TryGetItemAsync("Captures") as StorageFolder;
+			}
+			else
+			{
+				rootFolder = await StorageFolder.GetFolderFromPathAsync((string)settings.Values["rootPath"]);
+			}
 
-			await PopulateFileList();
+
+
+			await PopulateRootFileList();
+			await PopulateEditedFileList();
 			resetSelectionTools();
 		}
 
-		private async Task PopulateFileList()
+		private void App_Resuming(Object sender, Object e)
 		{
-			var rootFiles = await rootFolderPath.GetFilesAsync();
+			AsyncInit();
+		}
+
+		private async Task PopulateRootFileList()
+		{
+			rootFileList = new List<FileListItem>();
+
+			var rootFiles = await rootFolder.GetFilesAsync();
 			var files = rootFiles.OrderByDescending(file => file.DateCreated.LocalDateTime).ToArray();
 
 			foreach (var file in files)
 			{
 				FileListItem fileListItem = new FileListItem(file.DisplayName, file.Path, file.DateCreated.LocalDateTime, await ConvertThumbnailToBitmap(await file.GetThumbnailAsync(ThumbnailMode.SingleItem)));
-				fileList.Add(fileListItem);
+				rootFileList.Add(fileListItem);
 			}
 
-			fileListView.ItemsSource = fileList;
+			fileListView.ItemsSource = rootFileList;
 
-			if(files.Length > 0)
+
+			if (files.Length > 0)
 			{
 				await editor.setRawVideo(files[0].Path);
 				SetNewStreamSource(editor.rawVideoFilePath);
@@ -96,6 +120,23 @@ namespace SnipClip
 				SaveButton.IsEnabled = false;
 			}
 			
+		}
+
+		private async Task PopulateEditedFileList()
+		{
+			editedFileList = new List<FileListItem>();
+
+			var editedFiles = await editor.SaveFolder.GetFilesAsync();
+			var files = editedFiles.OrderByDescending(file => file.DateCreated.LocalDateTime).ToArray();
+
+			foreach (var file in files)
+			{
+				FileListItem fileListItem = new FileListItem(file.DisplayName, file.Path, file.DateCreated.LocalDateTime, await ConvertThumbnailToBitmap(await file.GetThumbnailAsync(ThumbnailMode.SingleItem)));
+				editedFileList.Add(fileListItem);
+			}
+
+			editedFileListView.ItemsSource = editedFileList;
+
 
 		}
 
@@ -137,7 +178,7 @@ namespace SnipClip
 			{
 				int selectedIndex = fileListView.SelectedIndex;
 
-				await editor.setRawVideo(fileList[selectedIndex].FilePath);
+				await editor.setRawVideo(rootFileList[selectedIndex].FilePath);
 
 				SetNewStreamSource(editor.rawVideoFilePath);
 			}
@@ -145,7 +186,7 @@ namespace SnipClip
 
 		private async void Open_Folder_Click(object sender, RoutedEventArgs e)
 		{
-			await Launcher.LaunchFolderAsync(rootFolderPath);
+			await Launcher.LaunchFolderAsync(rootFolder);
 		}
 
 
@@ -271,7 +312,7 @@ namespace SnipClip
 
 		}
 
-		private async void ChangeSaveFolder_Click(object sender, RoutedEventArgs e)
+		private async void ChangeEditedFolder_Click(object sender, RoutedEventArgs e)
 		{
 			FolderPicker fp = new FolderPicker();
 
@@ -283,7 +324,8 @@ namespace SnipClip
 			{
 				// The user selected a folder
 				// Perform actions with the selected folder
-				editor.SetSaveFolder(folder);
+				await editor.SetSaveFolder(folder);
+				AsyncInit();
 			}
 			else
 			{
@@ -318,6 +360,29 @@ namespace SnipClip
 		private async void OpenEditedVideoFolder(object sender, RoutedEventArgs e)
 		{
 			await Launcher.LaunchFolderAsync(editor.SaveFolder);
+
+		}
+
+		private async void ChangeRootVideoFolder(object sender, RoutedEventArgs e)
+		{
+			FolderPicker fp = new FolderPicker();
+
+			fp.SuggestedStartLocation = PickerLocationId.VideosLibrary;
+			fp.FileTypeFilter.Add("*");
+
+			StorageFolder folder = await fp.PickSingleFolderAsync();
+			if (folder != null)
+			{
+				// The user selected a folder
+				// Perform actions with the selected folder
+				settings.Values["rootPath"] = folder.Path;
+				rootFolder = folder;
+				await PopulateRootFileList();
+			}
+			else
+			{
+				// The user did not select a folder
+			}
 
 		}
 
